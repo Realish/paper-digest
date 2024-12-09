@@ -14,7 +14,7 @@ def encode_image(image_path):
 def extract_txt(image_path):
     base64_image = encode_image(image_path)
     response = client.chat.completions.create(
-      model = "gpt-4o-mini",
+      model = "gpt-4o",
       messages=[
         {"role": "system",
          "content": "You are a helpful assistant helping a user to extract text from an image of a document."},

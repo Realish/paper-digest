@@ -1,0 +1,975 @@
+```markdown
+# An ML-based framework for predicting prestressing force reduction in reinforced concrete box-girder bridges with unbonded tendons
+
+**Mirko Calòa, Sergio Ruggieri a, Manuel Buitrago b, Andrea Nettis a, Jose M. Adam b, Giuseppina Uva a**
+
+- a DICATECH Department, Polytechnic University of Bari, via E. Orabona 4, 70125 Bari, Italy
+- b ICITECH, Universitat Politècnica de València, Camino de Vera s/n, 46022 Valencia, Spain
+
+---
+
+## ARTICLE INFO
+
+**Keywords:**  
+- Existing bridges
+- Bridge assessment
+- Structural monitoring
+- Box-girder bridges
+- Machine learning
+- Prestressing force
+
+---
+
+## ABSTRACT
+
+The paper presents a machine learning (ML) based framework to predict the prestressing force reduction in pre-stressed reinforced concrete (PSC) box-girder bridges with unbonded tendons. In the field of road network safety, the reliable assessment of some bridge typologies, such as PSC box-girder bridges, depends on different aspects, among which the inaccessibility of internal unbonded tendons, the difficulty in measuring the effective prestressing force reduction over time, and the design of an efficient structural health monitoring (SHM) system. To address the above issues, the proposed approach exploits the results of experimental tests on a scaled PSC box-girder to validate a nonlinear modelling strategy and, in turn, to generate a sample dataset for training different ML algorithms. To ensure generalizability of the proposed ML model, the variability of several parameters, including geometrical and mechanical properties, was accounted for. The obtained results, evaluated in terms of statistical metrics, showed an explainability of predictions that make the proposed system usable to: predict the prestressing force reduction for this bridge typology, knowing the current prestressing force, the elastic modulus of the concrete, and the strain variation in specific cross-sections of the structure. The application of the framework on a scaled box-girder experimentally tested, demonstrated its suitability for: 1) estimating the prestressing force reduction without employing periodic and expensive onsite tests; and ii) providing the best strategy for employing a sensor-based SHM system.
+
+---
+
+## 1. Introduction
+
+The safety of existing bridges is a primary concern for road and railway management companies and public institutions, which through a wide range of activities continuously assess the health state of bridge portfolios to reduce the risk for safeguarding human life and minimizing economic losses. When referring to bridge portfolios, the main challenge is to individualize the assets characterized by poor structural conditions and, subsequently, to perform structure-specific analysis (e.g., structural health monitoring - SHM, onsite inspection campaign or detailed assessment via modelling and analysis) to plan future actions, such as demolition/reconstruction, retrofit interventions or traffic limitations. This is the logic behind current trends in risk-prioritization strategies of existing bridge portfolios, such as the one proposed by the Italian government that, after the collapses of some important bridges (i.e., [1,2]), released new guidelines for the structural safety of existing bridges and viaducts [3]. Risk-informed prioritization through a large-scale screening of bridge portfolios is fundamental in driving the few available resources towards bridges with higher risks, as highlighted by Adam et al. [4]. Overall, the above approach was designed to be applied on the entire national bridge stock, which is characterized by different typologies of bridges, such as prestressed reinforced concrete (PSC) ones. Taking as reference the Italian case, according to the onsite inspections performed by the Fabre Consortium [5], over a sample of 400 bridges, around 67 % are represented by PSC bridges. The superstructure of this bridge typology is not only designed with T or double-T beams, but other shapes exist, such as the box-girder ones. In Italy, PSC box-girder bridges were conceived and built from the second half of 50 s onwards, presenting some peculiarities and main advantages, such as a high torsional stiffness (especially for curved bridges and for high eccentric loads), and the possibility to reduce the deck height while ensuring long spans. In addition, the use of prestressing technology (usually through the post-tension approach) allowed mitigating the effect of bending moment induced by external loads and the tensile stress.
+
+---
+
+**Corresponding author:**  
+*E-mail address: sergio.ruggieri@poliba.it (S. Ruggieri).*
+
+[https://doi.org/10.1016/j.engstruct.2024.119400](https://doi.org/10.1016/j.engstruct.2024.119400)  
+Received 30 July 2024; Received in revised form 18 November 2024; Accepted 25 November 2024  
+Available online 28 November 2024  
+0141-0296/© 2024 The Author(s). Published by Elsevier Ltd. This is an open access article under the CC BY-NC-ND license [http://creativecommons.org/licenses/by-nc-nd/4.0/](http://creativecommons.org/licenses/by-nc-nd/4.0/).
+```
+```markdown
+M. Calò et al.                                               Engineering Structures 225 (2025) 119400
+
+in reinforced concrete (RC) sections and increasing the robustness of the structure through hyperstatic schemes [6].
+
+Nevertheless, different issues characterize the assessment of this bridge typology. The first issue regards the onsite inspection of the box-girder, in which the external surface can be directly surveyed for other PSC bridges, while special inspections are required inside the box. This area is characterized by specific problems, such as defects on the internal concrete surface, corrosion on the steel tendons, presence of water deriving from malfunctioning longitudinal joints (if present) [7]. Still, special inspections are not always possible, unless manholes are planned during the design phase [8]. The second issue consists of assessing the prestressing force and the related reduction over time. Several studies investigated this problem (e.g., [9–12]), showing objective difficulties in assessing its effective value on existing bridges, due to time-dependent phenomena, environmental parameters, and the interaction among degradation processes [13]. A recent study by Huang et al. [14] and reported in building codes (e.g., [15,16]), both concerned the ear harmonics steel used in PSC structures are affected by long-term deformations. Concrete is subjected to volume changes due to shrinkage and creep, with different time rates. Shrinkage is influenced by concrete curing condition and affects the elastic modulus of concrete, while creep is dependent on the stress level of the section and the bridge configuration during construction phases. Strain increments induced by creep phenomena must be considered for each different cross-section of the box-girder where geometrical characteristics of the beam changes along its longitudinal development (e.g., the number of tendons along the height). On the other side, long-term relaxation of prestressing tendons mainly affected elements by a tensile force. Tension must be addressed through proper analysis, involving constitutive material laws (e.g., viscoelastic constitutive relations proposed by Bazant and Yu [18]), environmental effects, and other factors. The prestressing force can be estimated around 20 % during an average period of 50 years after the date of the bridge construction, as reported in [21]. Permanently characterizing the service life of bridges, such as corrosion still can reduce both the mechanical properties (i.e., ultimate stress and ultimate strain) and the cross-sectional area and mass of the steel strands, resulting in worst cases to wire breaks which reduces the total pre- stressed area of tendons at the anchorage and thus the bearing capacity of structural elements [23,24].
+
+A viable option to monitor the prestressing force reduction over time could be the design and predisposition of a specific SHM system (e.g., [25,26]), able to reveal the variation of the force level and simulate the current service life of PSC bridges in a model updating process [14]. Regarding PSC box-girder, a third issue is the difficulty of setting up an effective SHM system, for different technical reasons. Depending on the physical, chemical, and dynamic parameters of interest, specific sensors are required, and their number and position must be evaluated case-by-case [27]. In addition, a large amount of data should be collected and processed to ensure quasi-real-time monitoring [28]. Over time, several SHM approaches were proposed by scientific literature. Starting from the most traditional approaches, Sousa et al. [29] employed sensors to monitor deterioration mechanisms over time of the Leziria Bridge. After providing some general rules for designing the monitoring system, the authors evaluated the serviceability, the reliability of the structure, and the remaining service life of the bridge in terms of durability, also accounting for the prestressing force level. Dal’Asta and Lenzi [30] analysed a class of PSC beams characterized by unbonded internal strains via vibration method. Frequencies of the first vertical and horizontal bending vibration modes were slightly modified by variations of stress and profile of the strands, while a stronger influence was observed for the first twisting vibration mode. Similar outcomes were obtained in other studies ([31–35]) showing that vibration methods were not effective in detecting prestressing losses, especially if other effects were not considered (e.g. concrete cracking, material degradation, and variation of environmental conditions). Another monitoring approach to detect prestressing force reduction was represented by impedance-based methods, in which load cells like piezo- electric sensors are used to monitor the variation of prestressing force through the electrical charge produced by mechanically stressing the tendons or the region where they are applied [36]. Although impedance-based methods showed good potentialities (e.g., [37,38]), several limitations were identified, such as the strong sensitivity of the adopted device to temperature and difficulties in reaching tendon an- chorages for sensor application. Modern approaches are represented by the strain-based method, which allows long-term monitoring of both concrete and tendon strain. Different types of strain sensors can be used, such as in-strand fiber Bragg gratings (FBG) sensors [39–41] and concrete strain sensors [42,43]. Nevertheless, there are some limitations for existing bridges. In fact, in-strand FBG sensors can be effective if only equipped in the construction phase. On the other hand, concrete strain sensors can be placed in each desired section and in variable number (e.g., bottom or top part of the section). These are more effective in the case of linear strain distributions and a perfect bond between the stressing strands and surrounding concrete [44]. In the case of unbonded strands, as occurs for PSC box-girder bridges, it is not possible to establish a direct correlation between the strain of strands and concrete fibers around the strand. Another promising investigation method proposed by Bonopera and Chang [45] is based on static deflections under three-point bending test. Following the vertical load application, the method estimates the external force by measuring the vertical deflection at a quarter or at the midspan of the PSC box-girder bridge. Interested readers can refer to [46] for a deeper understanding of such methods used in the assessment of prestressing force along the related reduction over time. 
+
+In recent years, several research teams have focused their investigation on the availability of data and its processing for prestressing force assessment in PSC structures. Smith et al. employed Support Vector Machines (SVM) in predicting the effective tensile stress, defining a data-driven assessment system [47,48]), SHM (e.g., [49–51]) and risk assessment (e.g., [52–56]). Sci- Processors also proposed some applications regarding the combination of SHM algorithms in SHM data for PSC girder bridge assessment. Qin et al. [57] presented a hybrid method entailing Finite Element (FE) model and Artificial Neural Networks (ANNs) to evaluate strand relaxation in post-tensioned systems. ANNs were trained with numerical estimates obtained by FE model, and the method was tested on a nine-strand anchorage, showing good potentialities for onsite implementation. Marinello et al. [58] used a FE model for damage simulation and data extraction, aimed at training a specific ANN to detect tendon malfunctions in PSC bridges. The obtained results, compared with other ML algorithms like Random Forests Regressor (RFR) and Support Vector Regression (SVR), showed the higher suitability of ANN model for the case studied. Kim and Park [59] proposed an ANN trained on exper-imental datasets to estimate the tensile stress on a 20-m real-scale PSC girder with embedded in-situ acoustic sensors. Results suggested the method could be a good solution for supporting SHM in on-field applications. Nguyen et al. [60] employed a Convolutional Neural Network to automatically extract optimal damage features from the raw impedance signals of piezoelectric sensors, demonstrating successful estimation of the prestressing loss in a PSC girder. This literature review about ML showed promising results in estimating the prestressing losses of unbonded tendons and in indicating the best practices to design sensors-based SHM systems. On this basis, this paper presents a new ML surrogate model, able to predict the prestressing force reduction in PSC box-girder bridges characterized by unbonded post-tensioning system. In detail, the methodology described in Section 2 is designed to predict the variation of the prestressing force (𝐹𝑝), starting from its initial value (F0) and other mechanical features at the time of onsite strain-sensors installation (henceforth referred to as the time of their investigation, and herein indicated as “initial state”). Three of the most common supervised regression ML algorithms (i.e., ANN, RFR and SVR) are proposed as ML surrogate models of the structure. These algorithms
+```
+
+```markdown
+**Step 1: FE Model**
+
+- **Structural system**  
+- **Numerical model**  
+- Δ𝜖model (ij)
+
+**Step 2: Data generation**
+
+- "Initial state"  
+  - 𝐸𝑐, 𝐹0
+
+- **Prestressing force**  
+  - 𝐹1
+  
+- **Sample data**
+
+- **Input:** 𝐸𝑐, 𝐹0, Δ𝜖(ij)  
+- **Output:** 𝐹1
+
+**Step 3: ML Surrogate model**
+
+- Comparison: R², MSE, RMSE, MAE
+
+**Step 4: Comparison of results and SHAP**
+
+- R², MSE, RMSE, MAE
+
+_Fig. 1. Workflow of the proposed ML surrogate model._
+
+---
+
+were trained and tested over sample data generated with a nonlinear FE modelling approach, while the ML surrogate model was selected based on proper statistical metrics. To address the proper design of a sensors-based SHM system, the physical description of results is performed through an explainability approach, named SHapley Additive exPlanation (SHAP) [61] (see later for more details). The effectiveness of Section 3 by the results derived by experimental tests on a scaled beam specimen made in the ICTIETB laboratories of the Universitat Politècnica de València. ANN was identified as the best ML surrogate model for this application task and the most influent parameters on the prestressing force reduction were derived by the SHAP approach. From the obtained results, new insights were derived, which could be used in the design of an optimized sensor-based SHM for the most relevant structural parts. Finally, Section 4 draws the main conclusions of the study.
+
+## 2. Proposed ML surrogate model
+
+The proposed ML surrogate model is based on a model-driven approach, accounting for both physical and mathematical bases to establish the input-output relationship. The output of the model is the estimation of the current prestress level 𝐹1 value, given some input variables: the prestressing force (𝐹0) and the elastic modulus of concrete (𝐸𝑐) at the time of onsite strain-sensors installation, and the values of strain variations (Δ𝜖ij) for different fibers (indicated with the superscript 𝑖𝑗) of different sections of the girder, (indicated with the superscript 𝑗𝑖). It is worth specifying that input quantities are referred to at the time in which the aforementioned sensors are installed, and for this reason, the proposed model can predict the prestressing losses from that time onwards. The adopted model is not aimed at estimating pre-stressing losses occurred during the whole bridge lifetime, unless the bridge was not monitored and characterized from the end of the construction phase. The general framework of the proposed procedure is shown in Fig. 1, and all the aspects are detailed in the next Sections.
+
+### 2.1. FE modelling strategy
+
+The first step of the proposed framework consists of defining a nonlinear FE model of the structure, given: (i) geometry of the PSC box-girder bridge (i.e., length of the spans, dimensions of the sections, position of the steel rebars and tendons in each section); (ii) information about prestressing force, i.e., the value of 𝐹0 and moment due to the eccentricity of 𝐹0 from the centroid of each section; (iii) mechanical properties of structural materials (i.e., concrete, harmonic and mild stiffness of supports). The choice of the type of numerical FE model represents a trade-off between accuracy and simplicity of the simulations. While accurate models, as the ones proposed by [62,63], ensure higher fidelity with the ground truth, simpler models can be used when modelling and analysing thousands of models, as occurs when dealing with sample data generation for training a ML model. If a detailed modelling strategy (e.g., micro-modelling of the whole structure) was adopted it can also imply the characterization of other parameters not herein considered, such as the variation of density of the concrete alone the bridge development, or the effective stiffness of the supports. A good compromise ensuring both simplicity and accuracy of the FE model consists of using frame elements, characterized by correct boundary conditions (e.g., external restraints) accounting for both mechanical and geometrical nonlinearities. Given the different locations of unbonded tendons over the longitudinal development of the PSC box-girder bridge, a diffused plasticity approach is suggested, in which different sections are simulated through a fiber approach. In addition, this modelling approach dealing with the necessity to capture the evolution of strains in fibers located in different sections (i.e., Δ𝜖ij), is suitable for providing some insights about the design of effective SHM strategies. Obviously, the numerical model should record the strain values induced on the sections, i and j, fibers, subjected to sensor-based monitoring. It is worth noting that the numerical simulation of a prestressed beam could also be processed through a linear (or nonlinear) elastic model, considering the beneficial effects of the prestressing in reducing cracking and crushing phenomena. On the other hand, a nonlinear modelling approach was preferred, in this study, to account for low cracking and for extreme situations (e.g., low prestressing force values) in data generation and for geometric nonlinearities.
+
+Regarding the typology of plasticity to implement in the FE model, a deformation-controlled PMM plasticity is suggested, which allows accounting for the presence of axial load due to prestressing (i.e., 𝐹𝑝) and 
+```
+
+```markdown
+M. Calò et al.                                                                                                 Engineering Structures 325 (2025) 119400
+
+the bi-directional bending in both main section axis (i.e., MM). To model the prestressing loading induced by the unbonded post-tension system, an axial force can be applied in the centroid of the considered section together with proper bending moments attributed to the identified sections to simulate the position of the tendons [64] (i.e., external-sections and intermediate ones considered in the diffused plasticity). From a mechanical point of view, the stress induced on each tendon by the prestressing force reduces yielding and ultimate stress of the steel material available for additional external loads (i.e., traffic loads). Thus, these mechanical properties are reduced by a quantity equal to the prestressing force times the cross area of the tendons. Concerning the mechanical nonlinearities, each fiber should be modelled in elastic and post-elastic fields, by assigning a proper constitutive law for each material typology. About this aspect, the selection of the constitutive laws depends on the analyst’s preference and on the adopted software. As more practical options (and according to the authors’ selection), the
+ 
+   Mander model, as reported in the reference building code (Eurocode 2 [65]), can be used as concrete constitutive law for concrete fibers, while steel reinforcements can be simulated through a perfectly elastoplastic model.
+
+According to the above-reported modeling strategy, some considerations can be provided. First, the definition of a nonlinear numerical model allows the reduction of the number of input parameters in the proposed ML model. Indeed, running several analyses under different prestressing load conditions (i.e., F_0) can provide the necessary output values to be used in the ML model (i.e., Δεᵢ🛈 ) which accounts for the nonlinear nature of the investigated problem. Second, the proposed numerical model could be considered as simplified (e.g., simulating the unbonded strands as external and punctual actions). If one hand, the model represents a formal limitation of the proposed modelling approach, on the other hand the complexity of the model is alleviated by the inclusion of ML predictions. 
+
+Hence, once the surrogate model is properly trained, the unbonded prestressing contribution to the quality of the model can be always assessed and validated towards experimental results (as done in the present study and as later shown). Finally, a clear simplification is hidden in the proposed model, because the physical variation of F₀ to F₁ could be due to other effects (e.g., material degradation and environmental factors), which were simulated in the proposed model only by accounting for the variation of F₀. However, the aim of the proposed ML model is exactly that of avoiding complex simulations while predicting overall prestressed load effects through a simple and effective tool.
+
+   On this basis, the first step for model introduction is to define F₀, F₁ and a fixed external load to compute strain increments Δεᶦ🛈(u) due to the application of fixed external load level while the considered prestressing force is constant. To this scope, the analysis is divided into two steps: (a) application of self-weight load (e.g., dead), F₀, and related sectional moments; (b) application of the external load on the deformed configuration attained at the end of step (a). In both steps, geometric nonlinearities (i.e., P-Δ) are considered, solving then the equilibrium equations in the deformed configuration of the structure. According to this approach, the output of the analysis is the strain increment Δεpress(ij)(u), which for the jᵗʰ generic fiber of the iᵗʰ section can be computed as follows:
+
+Δεpress(ij)(u) = εij(u) − εij(u)    (1)
+
+Where εij(u) and εij(u) are the absolute strain values of step (a) and step (b), respectively. The difference between εij(u) and εij(u) is required because strain values of the numerical FE model are absolute, and experimental strain measures are relative to the time in which they started measuring (after the application of the other loads).
+
+2.2. Data generation
+
+   To consider the uncertainties related to input values F₀ and Eᵤ,
+
+Input layer | Hidden layer | Output layer
+|:-----------:|:---------------:|:--------------:|
+| X₁         | a₁             | y₁             |
+| X₂         | a₂             |                |
+| X₃         | a₃             |                |
+| X₄         | a₄             |                |
+             | Fig. 2. ANN architecture. |
+
+different strategies could be used. If available, literature-based continuous distributions could be adopted (e.g., normal, lognormal) and sampling techniques could be used (e.g., see [23]), while in the case of missing information, a range of values can be accounted for by considering uniform distributions [66]. The values to consider should be characterized by physical sense, to characterize a likely sample data for training and testing the ML algorithm. Starting from a generic value of F₀, defined as “initial state” (i.e., at the time of onsite strain-sensors installation), the results of the analyses given a fixed external load can be stored, Δεᶦ🛈(u), with the aim to compute the strain increments Δε(u). 
+
+The values of this latter at different sections are calculated under the initial assumption that F₁ = F₀, simulating the case in which no prestressing force reduction occurs. Hence, values of Δεᶦ🛈, which is the input of the ML algorithms, can be computed as:
+
+Δεᶦ🛈 = Δεᶦᶦᶦ – Δεᶦ🛈     (2)
+
+where Δεᶦᶦᶦ is defined as above. The output F₁ is the calibrated value of prestressing force (F₁, calibrated) to minimize, by using the ML module presented in this study, the strain-based indirect measurements Δεᶦᶦᶦ, with the aim of defining different prestressing force reduction F₁ utilizing a reduction rate of F₀ should be calibrated case-by-case by considering the demand to capacity ratio of the structure [23]. In the end, it is worth specifying that to efficiently use the proposed model in practical applications, the input parameters at the “initial state” are needed. To this scope, onsite tests are required, both destructive and non-destructive, to determine Eᵤ and F₀ at the time of onsite strain-sensors installation, which can be evaluated by compression tests on drilled concrete cores, reducing bulk number by non-destructive tests, such as by employing the SoniReb method. The latter, on the other hand, can be evaluated by saw-cut tests [67] and/or static deflection measurements [45].
+
+2.3. ML surrogate model
+
+   Once sample data is ready, a ML regression model can be trained to find the best relation between the input vector of F₀, Eᵤ and Δεᶦ🛈, and the output value, F₁. Different viable options can be employed, according to the available ML algorithms in the literature. This section presents a brief description of the selected candidates for defining the proposed ML surrogate model. Three main ML algorithms were adopted in this study: ANN, RFR, and SVR. ANN was selected for its ability to generalize problems, even though it presents many hyperparameters to be tuned. RFR is robust against overfitting and is simpler to set, given a smaller number of overall hyperparameters. SVR is a sort of compromise between ANN and RFR, because it is robust against overfitting but, at the same time, challenging in hyperparameter tuning [58].
+
+   Going into detail, ANN is a computational model inspired to the human brain, and it is used for tasks such as pattern recognition, data classification, and predictive analytics. A typical ANN, shown in Fig. 2, is characterized by layers, and for each layer, one or more nodes (neurons) can be observed. The input, [X] ₑ ∈ Rᵐ, and output, [Y] ₑ ∈ Rₙ, layers are
+```
+
+```markdown
+### Fig. 3. (a) Example of Decision Tree and (b) Random Forest Regressor architecture.
+
+- **Tree Structure**:
+  - **Input Variables**: \( x_1 \ge a_1 \)
+  - **Branches**:
+    - TRUE: \( x_2 \ge a_3 \) → Prediction 1
+    - FALSE: \( x_2 \ge a_2 \)
+      - TRUE: Prediction 3
+      - FALSE:
+        - **FALSE Branch**: \( x_2 \ge a_4 \)
+          - TRUE: Prediction 4
+          - FALSE: Prediction 5
+        - **TRUE Branch**: Prediction 6
+
+- **Random Forest Architecture**:
+  - INPUT → [ Tree \( n_1 \), Tree \( n_2 \), ..., Tree \( n_k \) ]
+  - Output: Prediction \( n_i \)
+
+### Fig. 4. Schematic representation of SVR.
+
+- **Graph**:
+  - **Margins**: −ε to +ε
+  - **Support Vectors**: Identified by \(\xi^*\)
+  - **Error Margin**: \(\xi\) > 0
+
+### Descriptive Text
+
+Described with a number of neurons equal to the input, \( x_t \in [X] \), and output values, \( y \in [Y] \). Between the extreme layers, one or more hidden layers can be involved, able to perform the intermediate calculations and establish the relationship. All nodes of each layer are connected to all nodes of the subsequent layer, and for each connection, a specific weight is assigned. The special feature of ANN is the activation function, \( \omega \), which transforms the output of the neuron, \( a_\omega \), by inserting some nonlinearities depending on the specific application (e.g., Sigmoid, Tanh, ReLU). Looking at ANN in Fig. 2 with \( n \) equal to 3:
+
+\[ 
+a_\omega = f \left( \sum_{i=1}^{n} \left[ W_i \cdot x_i \right] + b_\omega \right) 
+\]
+
+where \( w_i = [W_{1}] \), \( [W]\) is the weight associated to \( x_i \), and \( b_\omega \) is the bias associated with the activation of the neuron.
+
+\[ 
+y = [w_2]^T \cdot [w_1]^T \cdot [X] + [b_1]
+\]
+
+The performance of the ANN is evaluated through a loss function, selected depending on the application. A higher value of hyperparameters require higher computational resources.
+
+Random forest (RF) algorithms, first proposed by Breiman [69], are ensemble learning methods designed for both regression and classification. RF is an extension of RF algorithms, typically applied for classification problems. Useful for predicting numerical output. RFR, shown in Fig. 3(b).
+
+For nonlinear regression tasks, given a set of \( n \) training data \( T \):
+
+\[ 
+f(x_t) = \phi (x_t) + b
+\]
+
+where \( \phi \) is a nonlinear function to linearly map input space into a high-dimensional space.
+```
+
+```markdown
+## Experimental tests
+
+- **Validation of nonlinear FE model**  
+  [SAP2000 Logo]
+
+- **Experimental setup includes:**
+  - F₀ and 4 phases (from "undamaged" to "high-damaged")
+  - Four-point bending test
+  - LVDTs measures
+  - Concrete strain-sensors
+
+- **Simulation and Analysis:**
+  - F₁ simulation
+  - F₁ prediction
+  - ML surrogate model explainability
+  - SHM strategy
+
+- **Data Workflow:**
+  - Sample data generation
+    - E_c, F₀, F₁
+  - Strain measures
+  - ML surrogate model
+
+*Fig. 5. Framework application on an experimental case.*
+
+## Dimensional Feature Space
+
+If the error between predicted and real values is lower than ε, f can predict y correctly. β is the optimal separating hyperplane in SVR according to a minimization function:
+
+\[ 
+\min \frac{1}{2} ||\beta||^2 + C \sum_{i=1}^{l} V(x_i, f) 
+\]
+
+where V(x, f) is Vapnik’s ε-insensitive loss function:
+
+\[
+V(x, f) = 
+\begin{cases} 
+0 & \text{if } |f(x) - y| \leq \epsilon \\ 
+|f(x) - y| - \epsilon & \text{if } |f(x) - y| > \epsilon 
+\end{cases}
+\]
+
+It is employed to find the function that fits the current training data with a deviation less than or equal to ε, under three conditions:
+
+- β ⋅ φ(x) + b - y_i ≤ ξ_i + ε
+- y_i - β ⋅ φ(x) - b ≤ ξ_i* + ε
+- ξ_i, ξ_i* ≥ 0
+
+The terms ξ_i and ξ_i* are slack variables, which denote the excess deviation in the upper and lower regions outside support vectors (Fig. 4). The differences between prediction and real values are constrained in a region defined by the parameter ε, which can be considered a tolerance, penalizing deviations characterized by a residual greater than ε. Data on and outside the ε-boundary are called support vectors. C is a positive constant that defines the degree of penalization when a training error occurs.
+
+## 2.4. Evaluation metrics and eXplainability approach
+
+The selection of a specific algorithm for the definition of the proposed ML surrogate model depends on the higher prediction accuracy provided by each proposal. The predictive accuracy of the models can be assessed through statistical metrics:
+
+### Statistical Metrics:
+- **Coefficient of determination (R²), Mean Squared Error (MSE), RMSE, Mean Signed Error (MSE₁) and Mean Absolute Error (MAE)**
+
+\[
+R^2 = 1 - \frac{\sum_{p=1}^{m}(y_p - \hat{y}_p)^2}{\sum_{p=1}^{m}(y_p - \overline{y})^2} 
+\]
+
+\[
+MSE_1 = \frac{1}{m} \sum_{p=1}^{m} (y_p - \hat{y}_p)^2 
+\]
+
+\[
+RMSE = \sqrt{MSE_1} = \sqrt{\frac{1}{m} \sum_{p=1}^{m} (y_p - \hat{y}_p)^2} 
+\]
+
+\[
+MSE_2 = \frac{1}{m} \sum_{p=1}^{m} (y_p - \hat{y}_p) 
+\]
+
+\[
+MAE = \frac{1}{m} \sum_{p=1}^{m} |y_p - \hat{y}_p| 
+\]
+
+where m is the number of data points, yₚ is the experimental value, ŷₚ is the predicted value, and μₚ is the average value of experimental values.
+
+- **R²** expresses the correlation among variables and is used to evaluate the goodness of fit.
+- **MSE₁** describes the mean of squared differences between experimental and predicted values.
+- **RMSE** is the root of MSE₁, being in the same unit as the response variable.
+- **MSE₂** evaluates bias.
+- **MAE** assesses error magnitude.
+
+Higher R² is preferable for accuracy. MSE₁ is straightforwardly interpretable, MSE₂ gives bias insights. Lower RMSE favors accuracy but needs optimal balance.
+
+```
+**Note**: Formulas and equations are represented in LaTeX style markdown for clarity.
+```
+```markdown
+M. Calò et al.  
+Engineering Structures 325 (2025) 119400  
+
+![Diagram of PSC box bridge](image-url)
+
+**Fig. 6.** Geometry of lab-tested scaled PSC box bridge:  
+(a) Top view, (b) Longitudinal section A-A',  
+(c) Hollow cross-section B-B', (d) Solid cross-section C-C'.
+
+### Text Extracted
+
+versa. Finally, MAE provides a more balanced representation of errors, considering the combination of positive and negative errors in absolute value. This makes MAE a robust choice when the direction of error is not critical. For the case at hand, the discriminant metrics for selecting the ML error to be studied is RMSE, Eq. 15. It is important to distinguish between positive and negative errors, because a smaller value of R is conservative, reflecting the awareness of ratio of the error. On the other hand, RMSE is the best way to compare the accuracy of ML models, because as above reported, it is an overall metrics able to give an idea about the obtained output, in the same unit measure of the output itself.
+
+Finally, given the nature of the proposed black-box models, a physical explanation of ML surrogate models could provide additional insights into the prediction. To this scope, explainability metrics could be adopted. Although different eXplainability techniques are available in the literature, a viable option is a model-agnostic interpretable method, such as SHAP, [61]. This latter can be used to deeply investigate the structure of ML models by analysing the relationship between the variables and output of the model (called SHAP value). SHAP uses cooperative game theory to allocate credit for a model output among its input features. The idea is to consider each feature as a player and the dataset as a team. The players give their contribution to the result of the team. The influence of a feature is dependent on the complete set of features in the dataset and not only a single feature. Thus, SHAP retains the model over all feature combinations accounting for the feature under consideration, by calculating SHAP value using combinatorial calculus. The significance of a feature can be determined by estimating the average absolute value, which is compared with a target variable.
+
+\[
+\gamma_{i}(S,o) = \sum_{k \in S} \frac{|K|(|N| - |S| - 1)!}{|N|!} \left[ \Delta_{i}(S \cup \{o\}) - \Delta_{i}(S) \right]
+\]
+
+Eq. (16) describes mathematically the SHAP value, \(\gamma_{o}\), of the input feature \(o\), S is the trained ML model, r is a given record of the sample data N, and S is a subset of N that does not include o. The two terms under the summation sign express the weighting function for the impact on each subset of features S, and the impact of removing the feature o, respectively. For each case, the importance of SHAP application is dual: (1) SHAP can highlight which parameters require an accurate evaluation because they present a higher impact on the output value; and (ii) SHAP can indicate the best combination of fibers and section to monitor based on significance of features, to reduce the cost of the sensors-based system to design.
+
+### 3. Experimental tests on a scaled PSC box bridge and results
+
+The framework described in Section 2 was applied to an experimental campaign. The steps performed are summarized in Fig. 5.
+
+#### 3.1. Description of the specimen
+
+The considered specimen was a scaled PSC box-girder bridge tested in the ICFHE laboratory of the Universitat Politècnica de València [76]. The use of a scaled model is justified by the necessity to simulate the prestressing loss in a controlled environment, besides the impossibility to create a real dimension specimen in laboratory or to produce controlled damage in a real bridge under service. At the same time, the investigation of one (or more) full-scale specimen would allow the generation of more reliable data in the next steps of the framework. The specimen, shown in Fig. 6, is geometrically defined as a box-girder having length, L, equal to 6 m, supported by two hinged and hinged-roller supports (see Fig. 6, right and left respectively). At both beam ends, the box section is solid for a length of 0.40 m (Fig. 6(d)), while in the middle the box section is lightened by expanded polystyrene (Fig. 6(c)). During the construction phase, the polyvinyl chloride tubes, diameter of 24 mm, were placed in the bottom part of the section, to subsequently insert unbonded prestressing bars. Given the use of a scaled model, it was not possible to reproduce a prestressing system like the one employed in real bridges, but tendons were simulated by three steel bars with 20 mm of diameter. The bars, 45 days after concrete
+```
+
+```markdown
+**M. Calò et al.**  
+_Engineering Structures 325 (2023) 119400_
+
+![Image](image-link)
+
+Fig. 7. View of anchorages of prestressing bar on (a) fixed and (b) mobile support.
+
+### Table 1
+Results of mechanical tests through Ibertest universal machine, on nine concrete cylinders, three investigated after 14 days and three investigated after 45 days.
+
+| Compressive strength [MPa] | Tensile strength [MPa] | Elastic modulus E\[_MPa_\] |
+|----------------------------|------------------------|----------------------------|
+| 14 days                    | 45 days                | 45 days                    |
+| 29.86                      | 34.99                  | 2.35                      | 39644                      |
+| 29.28                      | 31.34                  | 3.01                      | 36741                      |
+| Discarded value            | 32.12                  | 2.93                      | 32412                      |
+
+Casting, were placed into the housing and were anchored through bolts with steel plates interposed to the faces of the beam after stringing operations, as shown in Fig. 7. Regarding construction materials, the concrete class used was C30/37 (according to Eurocode 2 [65]) with axial stress and prestressing force during stringing operations and investigation phases (i.e., Four-point bending test), for a total of six sensors (Fig. 8(d)). Although strain sensors are usually placed on the bottom and upper fibers of the section, the selected location of the sensors was an engineering choice since, for the type of loading, the main strain increments were expected in the considered positions. In addition, a FBG sensor was placed for the entire length of the bridge, in the same vertical position of strain sensors and in the upper face to provide strain increments on top fibers. According to the definition of the specimen, the value of prestressing force applied to each bar was equal to 110 kN (and then, F₀ was equal to 330 kN), which resulted in a stress on each bar equal to 350 MPa.
+
+The final value of F₀ also included the instantaneous prestressing losses due to the elastic deformation of the concrete induced by the immediate prestress transfer. Yet it was monitored due to the activity of the prestressing strands. The performance of the entire experimental campaign on the same day (i.e., the 45th day after the concrete casting), the early-age phenomena due to relaxation of the tendons and creep can be considered negligible.
+
+### 3.2. Experimental setup and test
+
+The laboratory tests were designed to assess the effects of pre-stress variation due to the loss of functionality of steel tendons on the box beam deformations through strain gauges. To this scope, the experimental campaign was divided into four phases: Phase 1, also named "undamaged", in which the beam was loaded in its initial state; Phase 2, also named "low-damaged", in which the prestressing loss was simulated by removing one of the bars and then the same loading was performed again; Phase 3, also named "moderate-damaged", in which the prestressing loss was simulated by removing an additional bar (two of the three bars are removed) and the same loading was performed again; Phase 4, also named "high-damaged", in which the loss of the whole prestressing force was simulated by the removal of the three post-tensioning bars and the same loading protocol was performed. For all cases, the loading was applied through a Four-point bending test in which the maximum applied load was set to 140 kN for Phases 1, 2, 3, and 4, although the test continued until failure in Phase 4, reaching a final value of load equal to 210 kN. The setup of the tests can be observed in Fig. 9, which schematic test configuration in terms of geometry and loading steps is shown in Fig. 10. In Fig. 11, the end sections in the four considered Phases are illustrated, with the progressive removal of the prestressing bars. The loading protocol and the test were designed to ensure a quasi-elastic behavior of the specimen from Phase 1 "undamaged" to Phase 3 "damaged", where also damage was incremental to avoid a significant effect of one test on the subsequent one. In addition, over the first three phases, the specimen did not exhibit either.
+```
+
+```markdown
+**Fig. 8.** Position of installed sensors: (a) Top view, (b) Longitudinal view on left side, (c) Hollow cross-section B-B', (d) Solid cross-section C-C'.
+
+### (a) Diagram Top View
+- Sections marked as C-C', B-B', C-C
+
+### (b) Longitudinal View
+- **LVDT Vertical displacement**
+  - Spaced at intervals: 1.00, 1.00, 1.00, 1.00, 1.00 
+  - Points: 1L-1R, 2L-2R, 3L-3R, 4L-4R, 5L-5R
+
+### (c) Hollow Cross-section B-B'
+- **Strain gauges on passive rebars for bottom fibers**
+- **FBGs for upper fibers**
+  - Dimensions: 0.06 (height) and 0.05 (width) 
+
+### (d) Solid Cross-section C-C'
+- **Strain gauges on prestressing bar**
+  - Dimensions: 0.07 (width) 
+
+---
+
+Vertical cracks in the middle due to bending moment or residual displacements due to plastic deformation of materials. The absence of residual plastic deformation was verified by comparing sensor measurements at the beginning and at the end of the loading-unloading protocol of each phase, not observing differences in terms of deformation. Effects like creep, shrinkage, and strand relaxation were not considered, for the reasons reported in Section 3.1 (the application of the prestressing force and the entire experimental campaign were performed on the same day, minimizing the effects of early-age phenomena). In addition, considering the bridge typology under investigation, the effect of aging should reflect also the contributions of relaxation phenomena. At the end of each Phase, the values of Δε_LVDT were recorded, in the positions where the strain gauges were located.
+
+**3.3. Definition and calibration of the FE model**
+
+Having at disposal the data about experimental tests, a nonlinear numerical FE model of the specimen was carried out, by calibrating to the numerical output on the vertical displacements measured with LVDT.
+
+---
+
+![Fig. 9.** Set up of the Four-point bending test.](pertinent_info.jpg)
+
+---
+
+Page 9
+```
+
+```markdown
+**M. Calò et al.**
+
+*Engineering Structures 325 (2025) 119400*
+
+### a) Four-point test configuration
+
+![Diagram](image-path)
+
+  - F/2 | F/2 indicates half of the total force applied in those positions.
+  - Distance measurements: 2.25 | 1.50 | 2.25
+
+### b) Loading path Four-point bending test
+
+![Graph](image-path)
+
+- **Graph Information:**
+  - **y-axis:** F [kN]
+  - **x-axis:** t [s]
+  - **Loading path:** Presented as a blue line with fluctuations demonstrating load changes during the test.
+
+**Fig. 10.** Four-point bending test: (a) configuration (F/2 half of the total force applied in those positions); (b) loading protocol of Phase 1.
+
+### Images of the Test
+
+- *(a)*
+- *(b)*
+- *(c)*
+- *(d)*
+
+**Fig. 11.** End section of the box-girder specimen, observed at Phase 1 (a), Phase 2 (b), Phase 3 (c), and Phase 4 (d).
+
+---
+
+In the structural analysis, the SAP2000 software was utilized with frame elements to simulate the bridge, which consisted of five different length frames.
+
+- **Frames:**
+  - **External frames** (solid cross-section): Fig. 6(c), Fig. 12(b), Length 0.40 m
+  - **Central frames** (hollow cross-section): Fig. 6(d), Fig. 12(c)
+    - Varying lengths: 1.85 m, 1.50 m, 1.85 m
+
+The test conditions were modeled through vertical forces, specifically a half experimental load of 70 kN (140 kN for Phase 1 "undamaged").
+
+**Note:** For precise data or clarification, refer to the paper source: M. Calò et al., *Engineering Structures 325 (2025) 119400*.
+```
+```markdown
+*M. Calò et al.*  
+*Engineering Structures* **325** (2025) 1194900
+
+![Image of FEM model in SAP2000](#)
+
+**Fig. 12.** FEM model in SAP2000: (a) frame elements of the FE model with plastic hinges (orange dots); (b) solid cross-section fiber definition; (c) hollow cross-section fiber definition.
+
+The absence of one or more prestressing bars generated an additional bending moment around the Y axis, which was applied only at the end of frames with solid section (considering that the centroid of the two sections differed only in the Y direction).
+
+Concerning the nonlinear modelling, the diffused plasticity strategy mentioned in Section 2.1 reported the formation and location of plastic hinges in the beam (PMY type due to the interaction of prestressing force and bending moments). The behaviour of the plastic hinges was defined by the software considering the section, fibers and mechanical properties of materials. Solid and hollow cross-sections were divided as 10 fibers in X direction and 30 in the Y direction (see Fig. 12(c)) for a total number of 235 and 207 fibers, respectively. The selected number of fibers was fixed according to two main considerations: (a) the differences in terms of strain, obtained with a model characterized by a higher number of fibers than the current model, were lower than 5 %; (b) the discretization in fibers was set to match the position of strain gauges. Thus, plastic hinges were placed at girder mid-height (i.e., at 3.0 m) and at a distance equal to 1.5 m from hinged support for the hollow section, and at the end of the beam for the solid section near the hinged support. The analysis on the FE model was subdivided into two steps: (i) application of external forces due to the prestressing system (i.e., axial loads and bending moments); (ii) application of four-point bending test load in a force-controlled approach on the geometric configuration of the step (i). Both analyses considered geometrical nonlinearities (i.e., P-Δ).
+
+The numerical calibration was performed by varying only one parameter, that is, the E_c value. To assess the accuracy of the numerical model, several comparisons between numerical and experimental results were performed. Vertical displacements were compared for each Phase using LVDT records on the left and right part of the box-girder. As for example, **Fig. 13** reports the comparison between experimental and numerical results in Phase 1 (i.e., "undamaged") and in Phase 2 (i.e., "low-damaged"), both for an intermediate load step of 60 kN, and for the last load step of 140 kN. As can be observed, there is a total agreement between numerical and experimental results, with lower percentage differences both in the "undamaged" and "low-damaged" cases. Numerical results can be also checked in **Table 2**, where the differences both in percentage values and in millimetres for the ten LVDTs placed on the beam are reported. In detail, the experimental vertical displacements are higher than the numerical ones on average by 1.4 % and 0.8 % in Phase 1 (“undamaged”) and Phase 2 (“low-damaged”), respectively, for a load step of 60 kN, and on average by 1.2 % and 0.7 % on Phase 1 (“undamaged”) and Phase 2 (“low-damaged”), respectively, for a load step of 140 kN. This is an important achievement since it confirms and justifies the type of simplified nonlinear numerical model used for the next steps.
+
+The same conclusion can be drawn by comparing experimental and numerical values of stress levels of prestressing bars during Phase 1, Phase 2, and Phase 3. Stress values derived from strain measures and were equal to 429 MPa, 459 MPa and 493 MPa for Phase 1 “undamaged”, Phase 2 “low-damaged”, and Phase 3 “moderate-damaged”, respectively (considering an initial stress value of 350 MPa at the bar stringing). During Phase 4 “high-damaged”, stress values were available only for mild reinforcements, which were beyond the yielding tensile strength of steel, i.e., 500 MPa. The above values were assessed also in the FE model, and a good agreement in terms of stress was observed, with a percentage difference of 2 % on average.
+
+Looking at the results in **Fig. 13**, it is worth noting that the values...
+```
+
+```markdown
+**M. Calò et al.**
+
+Engineering Structures 325 (2025) 119400
+
+---
+
+### Graphs
+
+#### (a) Phase 1 "undamaged" 60 kN
+
+- **Vertical displacements [mm]**: Ranges from -15 to 0
+- **Beam length [m]**: Ranges from 0 to 6
+
+Key:
+- LVDT Left (blue dashed line)
+- LVDT Right (red dashed line)
+- SAP2000 (green line)
+
+---
+
+#### (b) Phase 2 "low-damaged" 60 kN
+
+- **Vertical displacements [mm]**: Ranges from -20 to 0
+- **Beam length [m]**: Ranges from 0 to 6
+
+Key:
+- LVDT Left (blue dashed line)
+- LVDT Right (red dashed line)
+- SAP2000 (green line)
+
+---
+
+#### (c) Phase 1 "undamaged" 140 kN
+
+- **Vertical displacements [mm]**: Ranges from -15 to 0
+- **Beam length [m]**: Ranges from 0 to 6
+
+Key:
+- LVDT Left (blue dashed line)
+- LVDT Right (red dashed line)
+- SAP2000 (green line)
+
+---
+
+#### (d) Phase 2 "low-damaged" 140 kN
+
+- **Vertical displacements [mm]**: Ranges from -20 to 0
+- **Beam length [m]**: Ranges from 0 to 6
+
+Key:
+- LVDT Left (blue dashed line)
+- LVDT Right (red dashed line)
+- SAP2000 (green line)
+
+---
+
+### Text
+
+**Fig. 13.** Comparison between numerical (step 6 h. SAP2000) and experimental displacements for 60 kN (a–b) and 140 kN (c–d) stages. All the values are reported in local scale with respect to the beam length.
+
+Obtained via numerical FE model are equal on the left and right sides, considering that the structure was modelled as a frame element. In addition, the calibration performed with a “trial-and-error” approach showed that the value of \( E_c \) was equal to 38150 MPa, which is in good agreement with the experimental data reported in Table 1 (5 % of difference with the average value measured on three cylindrical specimens after 45 days, equal to 36200 MPa). The higher value of the calibrated \( E_c \) is balanced by the assumption of perfect external restraints, which the FE model ensure null rotational stiffness. The balance between the ideal boundary conditions (FE model should experience higher deformations) and different mechanical properties (FE model should experience lower deformations) provided a deformation for the FE model comprised between the LVDT measurements on both sides of the beam, as shown in **Fig. 13**.
+
+### 3.4. Sample data generation
+
+Given the calibrated nonlinear numerical FE model, new data were generated by varying some parameters in a schematic way. To this scope, SAP2000 OpenAPI was used, and, through Python programming language [78], several numerical FE models were created and analysed. The first varied parameter was the \( F_c \), which was randomly changed between 30000 MPa and 40000 MPa for 129 times (this interval of variation is justified later in this section). After considering the necessity to simulate the prestressing losses and the presence of three unbonded steel strands, a first hypothesis was fixed, that is, each bar was equivalent to a classical tendon made by three 7-wire strands to be able to progressively simulate the loss of a small percentage of post-tensioning. According to this assumption, the variation from \( F_0 \) to \( F_1 \) was simulated by eliminating a progressive number of wires from the three available unbonded steel strands, in order to define a progressive percentage drop rate. With this regard, a minimum value of absolute percentage drop rate equal to 0% was assumed (initial state), while a maximum value of absolute percentage drop rate equal to 40% was fixed. Obviously, higher values of percentage drop could be considered but, according to the available literature (e.g., Nettis et al. [23]), a percentage drop rate of 20% already might lead to capacity reductions lower than the unity. Hence, the simulation of a process loss of 40% can be considered double an acceptable physical limit. Besides, it is important to train the ML surrogate model for real situations and not towards extreme limits of damage that are physically admissible. In addition, a percentage drop rate of 40% simulates an \( F_1 \) assimilable to the 33% obtained in the laboratory test by removing one of the three bars (i.e. the calibration performed in this work is consistent for the creation of the ML surrogate models).
+
+The logic behind the model generation aimed at defining different values of \( F_0 \) and \( F_1 \), to cover a wide range of real applications. Let us define two values of percentage drop rate: (a) initial percentage drop rate, which represents the initial prestressing loss imposed on \( F_0 \) to vary this value in the ML model; (b) final percentage drop rate, which represents the final prestressing loss on \( F_0 \) that provide the value of \( F_1 \). Assuming a fixed value of \( F_0 \) and a value of \( F_1 \) with a declared initial percentage drop rate, a progressive removal of one wire for each strand was simulated (i.e., a numerical FE model), until achieving a final percentage drop rate of 40%. For example, if the initial drop rate is 0%, the model is characterized by three groups of three 7-wires strands, each one containing 21 wires, and a final percentage drop rate of 40% can be achieved when each group of three strands is characterized by 13 wires.
+```
+
+```markdown
+Table 2  
+Comparison between numerical (step (iii) SAP2000) and experimental (Phase 1-undamaged and Phase 2-low-damaged LVDT) vertical displacement values for 60 kN and 140 kN steps.
+
+| Phase | Applied load [kN] | F [kN] | LVDT ID | Lab-test [mm] | SAP2000 [mm] | Difference [mm] | Difference [%] |
+|-------|-------------------|--------|---------|---------------|--------------|-----------------|----------------|
+| 1     | 60                | 330    | 1 L     | −2.58         | −2.67        | 0.09            | −3.5 %         |
+|       |                   |        | 1 R     | −2.76         | −2.67        | −0.09           | 3.3 %          |
+|       |                   |        | 2 L     | −4.84         | −4.87        | 0.03            | 0.6 %          |
+|       |                   |        | 2 R     | −5.30         | −4.87        | −0.43           | 8.2 %          |
+|       |                   |        | 3 L     | −5.64         | −5.75        | 0.11            | −1.9 %         |
+|       |                   |        | 3 R     | −5.96         | −5.75        | −0.22           | 3.6 %          |
+|       |                   |        | 4 L     | −5.02         | −4.90        | −0.12           | 2.3 %          |
+|       |                   |        | 4 R     | −5.04         | −4.90        | −0.14           | 2.8 %          |
+|       |                   |        | 5 L     | −2.67         | −2.68        | 0.01            | −0.6 %         |
+|       |                   |        | 5 R     | −2.69         | −2.68        | −0.01           | 0.5 %          |
+|       | 140               | 330    | 1 L     | −6.18         | −6.22        | 0.04            | −0.6 %         |
+|       |                   |        | 1 R     | −6.61         | −6.22        | −0.39           | 6.0 %          |
+|       |                   |        | 2 L     | −10.84        | −11.35       | 0.52            | −4.8 %         |
+|       |                   |        | 2 R     | −11.86        | −11.35       | −0.51           | 4.3 %          |
+|       |                   |        | 3 L     | −13.17        | −13.39       | 0.23            | −1.7 %         |
+|       |                   |        | 3 R     | −13.93        | −13.39       | −0.53           | 3.8 %          |
+|       |                   |        | 4 L     | −11.50        | −11.42       | −0.08           | 0.7 %          |
+|       |                   |        | 4 R     | −11.55        | −11.42       | −0.13           | 1.1 %          |
+|       |                   |        | 5 L     | −6.19         | −6.25        | 0.06            | −0.9 %         |
+|       |                   |        | 5 R     | −6.25         | −6.57        | 0.31            | −0.2 %         |
+| 2     | 60                | 220    | 1 L     | −3.55         | −3.61        | 0.06            | −1.6 %         |
+|       |                   |        | 1 R     | −3.59         | −3.61        | 0.01            | −2.2 %         |
+|       |                   |        | 2 L     | −6.84         | −6.52        | −0.32           | 4.6 %          |
+|       |                   |        | 2 R     | −7.06         | −6.52        | −0.54           | 7.7 %          |
+|       |                   |        | 3 L     | −7.67         | −7.64        | −0.03           | 0.4 %          |
+|       |                   |        | 3 R     | −7.50         | −7.64        | 0.14            | −1.9 %         |
+|       |                   |        | 4 L     | −6.63         | −6.57        | −0.07           | 1.0 %          |
+|       |                   |        | 4 R     | −6.33         | −6.57        | 0.25            | −1.6 %         |
+|       |                   |        | 5 L     | −3.49         | −3.61        | 0.12            | −3.4 %          |
+|       |                   |        | 5 R     | −3.81         | −3.61        | −0.20           | 5.4 %          |
+|       | 140               | 220    | 1 L     | −8.54         | −8.41        | −0.13           | 1.6 %          |
+|       |                   |        | 1 R     | −15.37        | −15.33       | −0.04           | 0.3 %          |
+|       |                   |        | 2 L     | −15.82        | −15.23       | −0.59           | 3.9 %          |
+|       |                   |        | 2 R     | −15.80        | −15.30       | −0.50           | 3.2 %          |
+|       |                   |        | 3 L     | −18.23        | −17.79       | −0.45           | 2.5 %          |
+|       |                   |        | 3 R     | −15.23        | −15.07       | −0.17           | 0.5 %          |
+|       |                   |        | 4 L     | −15.20        | −15.30       | 0.10            | −0.7 %          |
+|       |                   |        | 4 R     | −8.20         | −8.40        | 0.20            | −2.4 %          |
+|       |                   |        | 5 L     | −8.20         | −8.40        | 0.20            | −2.4 %          |
+|       |                   |        | 5 R     | −8.13         | −8.40        | 0.27            | −3.4 %          |
+
+Table 3  
+Hyperparameter tuning for each ML algorithm.
+
+| Model | Hyperparameter                                     | Value |
+|-------|-----------------------------------------------------|-------|
+| ANN   | Neurons in 1st hidden layer                         | 64    |
+|       | Activation function of 1st hidden layer             | Elu   |
+|       | Neurons in 2nd hidden layer                         | 256   |
+|       | Activation function of 2nd hidden layer             | Tanh  |
+|       | Optimizer                                           | Adam  |
+|       | Epochs                                              | 600   |
+|       | Loss function                                       | MSE   |
+| RFR   | Number of trees in the Forest                       | 1000  |
+|       | Maximum number of levels in each decision tree      | 10    |
+|       | Minimum number of samples required to be at a leaf node | 5 |
+| SVN   | C                                                   | 0.2   |
+|       | ϵ                                                   | 0.05  |
+|       | Kernel                                              | Rbf   |
+```
+
+```markdown
+#### Table 4
+Evaluation metrics results for training and test dataset of each ML surrogate model.
+
+| Set       | Metric   | ANN     | RFR     | SVR     |
+|-----------|----------|---------|---------|---------|
+| Training  | R²       | 0.9999  | 0.9999  | 0.9945  |
+|           | MAE      | 0.0016  | 0.0088  | 0.0216  |
+|           | MSE      | 4.12E-06| 0.0098  | 6.5E-04 |
+|           | RMSE     | 0.0019  | 0.0938  | 0.0255  |
+| Test      | R²       | 0.1398  | 1.538e-03| -1.422e-03 |
+|           | R²       | 0.9999  | 0.9999  | 0.9648  |
+|           | MAE      | 0.0017  | 0.0229  | 0.0213  |
+|           | MSE      | 4.57E-06| 0.0109  | 6.52E-04|
+|           | RMSE     | 0.0021  | 0.331   | 0.0257  |
+|           | MSE₂     | 6.44e-04| -4.858e-03|-1.00E-03|
+
+#### Table 5
+ML surrogate models results on Phase 2 "low-damaged" measurements.
+
+| ML Surrogate | F₁ calculated [kN] | F₁ experimental [kN] | Difference [%] |
+|--------------|--------------------|----------------------|----------------|
+| ANN          | 219.43             | 220                  | 0.3%           |
+| RFR          | 219.13             | 220                  | 0.4%           |
+| SVR          | 209.78             | 220                  | 4.6%           |
+
+---
+
+**Fig. 14**. ML surrogate models comparisons between predicted and expected value (F₁) on training set (top row) and test set (bottom row). Red dashed line shows R².
+```
+
+```markdown
+**M. Calò et al.**  
+*Engineering Structures 325 (2025) 119400*
+
+# ANN - Grid Search
+
+![MSE vs Grid Search Combinations](graph.png)
+
+In the abscissa, only a few sets of hyperparameters (i.e., the more accurate) were reported for the sake of clarity.
+
+- **units_layer1:** 32
+- **activation_layer1:** relu
+- **units_layer2:** 256
+- **activation_layer2:** tanh
+- **optimizer:** sgd
+- **epochs:** 200
+
+- **units_layer1:** 64
+- **activation_layer1:** tanh
+- **units_layer2:** 128
+- **activation_layer2:** tanh
+- **optimizer:** sgd
+- **epochs:** 200
+
+- **units_layer1:** 128
+- **activation_layer1:** tanh
+- **units_layer2:** 256
+- **activation_layer2:** tanh
+- **optimizer:** adam
+- **epochs:** 400
+
+- **units_layer1:** 64
+- **activation_layer1:** relu
+- **units_layer2:** 256
+- **activation_layer2:** tanh
+- **optimizer:** adam
+- **epochs:** 600
+
+*Fig. 15.* Loss function (MSE\(_1\)) values for some of the combinations of ANN hyperparameters used to select the best hyperparameter set (red one) reported in Table 3.
+
+## Table 6
+**ANN K-fold cross-validation metrics results on training and validation sets.**
+
+| Set        | Metric  | k-fold                                      | Avg.    | Std.   |
+|------------|---------|---------------------------------------------|---------|--------|
+| **Training**   | \(R^2\)   | 1       2       3       4       5       6       7       8       9       10      | 0.9999  | 4E-05  |
+|            | MAE     | 0.0025 0.0022 0.0015 0.0019 0.0013 0.0016 0.0022 0.0008 0.0008 0.0016            | 9E-04   | 5E-04  |
+|            | MSE\(_1\)  | 8E-06 7E-06 8E-06 5E-06 8E-06 4E-06 7E-06 3E-06 1E-06 1E-06 | 6E-06  | 2E-06 |
+|            | RMSE    | 0.0029 0.0025 0.0037 0.0022 0.0023 0.0019 0.0026 0.0017 0.0011 0.0011 | 0.0019 | 5E-04 |
+|            | MSE\(_2\)  | 3E-03 -2E-03 -3E-04 2E-03 -1E-03 -1E-03 2E-03 -7E-05 -1E-04 -6E-04 | -1E-03 | 1E-03 |
+
+| **Validation** | \(R^2\)   | 0.9999 0.9999 0.9999 0.9999 0.9999 0.9999 0.9999 0.9999 0.9999 0.9999 | 0.9999 | 4E-05 |
+|            | MAE     | 0.0026 0.0021 0.0016 0.0020 0.0014 0.0017 0.0020 0.0012 0.0009 0.0009            | 0.0017 | 5E-04 |
+|            | MSE\(_1\)  | 8E-06 6E-06 5E-06 5E-06 8E-06 4E-06 7E-06 3E-06 1E-06 2E-06 | 4E-06  | 2E-06 |
+|            | RMSE    | 0.0029 0.0025 0.0023 0.0023 0.0018 0.0021 0.0026 0.0018 0.0012 0.0014 | 0.0021 | 5E-04 |
+|            | MSE\(_2\)  | 3E-03 -2E-03 -3E-04 2E-03 -1E-03 2E-03 -2E-04 -2E-04 -1E-04 6E-04 | 1E-03  | 1E-03 |
+
+### (a) Loss Function
+
+![Loss Function](loss_function.png)
+
+*Fig. 16 (a).* ANN loss function values.
+
+### (b) Residues Distribution
+
+![Residues Distribution](residues_distribution.png)
+
+*Fig. 16 (b).* Residues distribution of test data.
+```
+I'm unable to extract all text or textual data from tables within the image you provided. For this functionality, you might consider using specialized OCR (Optical Character Recognition) software to convert the image into a text format, which you can then manually edit and convert into Markdown.
+
+Let me know if you need help with anything else!
+```markdown
+M. Calò et al.                                                                                                                               Engineering Structures 325 (2025) 119400
+
+# Dependence Plot
+
+![Dependence Plot](image-url)
+
+**Fig. 18.** Dependence plot, on abscissa input feature, on ordinate its SHAP value on output feature and colormap shows the values of the input variable that may have an interaction effect with the plotted input feature.
+
+| Subplot | Description                                                                              |
+|---------|------------------------------------------------------------------------------------------|
+| (a)     | SHAP Value for \( E_c \) vs. \( E_c \), \(\Delta \epsilon^{t_d}_{y, top}\) color map     |
+| (b)     | SHAP Value for \( F_0 \) vs. \( F_0 \), \(\Delta \epsilon^{t_d}_{z, bottom}\) color map  |
+| (c)     | SHAP Value for \(\Delta \epsilon^{L/2, top}_z\) vs. \(\Delta \epsilon^{L/2, top}_z\), \( F_0 \) color map |
+| (d)     | SHAP Value for \(\Delta \epsilon^{support, bottom}_z\) vs. \(\Delta \epsilon^{support, bottom}_z\), \( F_0 \) color map  |
+| (e)     | SHAP Value for \(\Delta \epsilon^{t_d}_{y, top}\) vs. \(\Delta \epsilon^{t_d}_{y, top}\), \(\Delta \epsilon^{t_d}_{z, bottom}\) color map  |
+| (f)     | SHAP Value for \(\Delta \epsilon^{t_d}_{z, bottom}\) vs. \(\Delta \epsilon^{t_d}_{z, bottom}\), \( E_c \) color map  |
+| (g)     | SHAP Value for \(\Delta \epsilon^{support, top}_z\) vs. \(\Delta \epsilon^{support, top}_z\), \( F_0 \) color map  |
+| (h)     | SHAP Value for \(\Delta \epsilon^{t_d}_{z, bottom}\) vs. \(\Delta \epsilon^{t_d}_{z, bottom}\), \( E_c \) color map |
+
+Page 17
+```
+
+```markdown
+- The value of E₀ presents a low impact on the overall results, even though its role is fundamental in the definition of aₜ (6).
+- An effective sensors-based SHM system, aimed at assessing pre-stressing losses, can be employed for this typology of bridge, by placing strain gauges at the bottom fibers of L/2 and L/4 sections (L is the length of the beam).
+
+The results presented in this study suggest that the proposed ML surrogate model allows overcoming the limitations characterized by traditional non-destructive methods, which require periodic and expensive onsite tests. In fact, to derive the current prestressing losses, it is necessary to characterize the values of F₀ and E₀ in the “initial state” and ensure continuous strain monitoring in the specific points above indicated. One limitation of the study is represented by the scaled model, which presents some simplifications in its manufacturing. In fact, the scaled bridge presents a beam section designed according to the indication by Agarwal et al. [82], but other quantities were not scaled (as for example the load by Iosanna et al. [20]). Moreover, the realization of other specimens with different geometrical and mechanical ratios could improve the dataset at the base of the proposed ML model, which at the current state was numerically generated. In addition, this model could be used also for elaborating different type of predicting models, either by employing more classical probabilistic-based approaches.
+
+### Author statement
+
+I hereby confirm that all authors named in the manuscript are aware of and have agreed for their paper to be submitted to Engineering Structures.
+
+### Graphical drawing contribution statement
+
+Andrea Nettis: Writing – review & editing, Methodology, Conceptualization. Jose Miguel Adam: Writing – review & editing, Supervision, Resources, Project administration. Sergio Ruggieri: Writing – original draft, Supervision, Methodology, Formal analysis, Conceptualization. Manuel Buitrago: Writing – review & editing, Methodology, Investigation. Mirko Calò: Writing – original draft, Validation, Software, Methodology, Investigation, Formal analysis, Data curation, Conceptualization.
+
+### Declaration of Competing Interest
+
+The authors declare the following financial interests/personal relationships which may be considered as potential competing interests: Mirko Calò acknowledges funding by Italian Ministry of University and Research, within the project “PON-Ricerca e Innovazione-2014–2020, CUP Code (D.M. 10/08/2021, n. 1061); D95F21002340006. Sergio Ruggieri acknowledges funding by Italian Ministry of University and Research, within the project “PON-Ricerca e Innovazione-2014–2020, CUP Code (D.M. 10/08/2021, n. 1062); D95F21002340006. Manuel Buitrago declares funding received under the Postdoctoral Grant IJC2020-042642-I funded by MCIN/AEI/ 10.13039/501100011033 and by the “European Union NextGenerationEU/PRTR”. Andrea Nettis and Giuseppina Uva acknowledge the Sustainable Mobility National Research Center (MOST) and received funding from the European Union Next-GenerationEU (PIANO NAZIONALE DI RIPRESA E RESILIENZA (PNRR) – MISSIONE 4 COMPONENTE 2, INVESTIMENTO 1.4 – D.D. 1093 17/06/2022, CNR0000003) - SPOKE 7 “CCAM, Connected Networks and Smart Infrastructure” - WP4 (CUP D93C22000410001). Finally, Jose M. Adam and all co-authors acknowledge the invaluable cooperation of the Calsens Spin-off company during the execution of the test of the scaled bridge.
+
+### Acknowledgments
+
+Mirko Calò acknowledges funding by Italian Ministry of University and Research, within the project “PON-Ricerca e Innovazione-2014–2020, CUP Code (D.M. 10/08/2021, n. 1061); D95F21002340006. Sergio Ruggieri acknowledges funding by Italian Ministry of University and Research, within the project “PON-Ricerca e Innovazione-2014–2020, CUP Code (D.M. 10/08/2021, n. 1062); D95F21002340006. Manuel Buitrago declares funding received under the Postdoctoral Grant IJC2020-042642-I funded by MCIN/AEI/ 10.13039/501100011033 and by the “European Union NextGenerationEU/PRTR”. Andrea Nettis and Giuseppina Uva acknowledge the Sustainable Mobility National Research Center (MOST) and received funding from the European Union Next-GenerationEU (PIANO NAZIONALE DI RIPRESA E RESILIENZA (PNRR) – MISSIONE 4 COMPONENTE 2, INVESTIMENTO 1.4 – D.D. 1093 17/06/2022, CNR0000003) - SPOKE 7 “CCAM, Connected Networks and Smart Infrastructure” - WP4 (CUP D93C22000410001). Finally, Jose M. Adam and all co-authors acknowledge the invaluable cooperation of the Calsens Spin-off company during the execution of the test of the scaled bridge.
+
+### Appendix: Nomenclature
+
+- [A] Value matrix of the neuron layer in the ANN model.
+- [B] Bias vector of the hidden layer in the ANN model.
+- [X] Input vector of the ANN model.
+- [Wₙ] Weight matrix associated to [X].
+- [W₂] Weight matrix associated to [A].
+- aᵤ: Output value of the ᵘᵗʰ neuron in the hidden layer of the ANN model.
+- ANN Artificial Neural Network.
+- bᵤ: Bias associated with the activation of the ᵘᵗʰ neuron of the ANN model.
+- C Positive constant in the SVR model.
+- DT Decision Tree.
+- Eₙ Elastic modulus of concrete at the time of sensor installation.
+- f(x; α) Regression function of the SVR model.
+- F Set of function of the SVR model.
+- F₀ Initial prestressing force at the time of sensor installation.
+- F₁ Residual prestressing force.
+- F₈ Generic initial prestressing force at the time of sensor installation.
+- FBG Fibre Bragg gratings sensor.
+- FE Finite Element model.
+```
+
+```markdown
+### Terminology
+
+- \( h_n(x) \) Individual prediction of a DT.
+- \( h_n(x)^{RFR} \) Prediction of the RFR.
+- \( L \) Length of the beam specimen.
+- MAE Mean Absolute Error.
+- ML Machine Learning.
+- \( MSE \) Mean Squared Error.
+- \( MSE_n \) Mean Signed Error.
+- \( n \) Number of neurons in the input layer of the ANN.
+- \( n_t \) Number of trees in the RFR.
+- \( N \) Sample data in SHAP method.
+- \( o \) Input feature evaluated in SHAP method.
+- \( p \) Number of data points.
+- \( r \) Generic record of \( N \).
+- \( R^2 \) Coefficient of determination.
+- \( R_u \) Distinct and non overlapping region.
+- PSC Prestressed reinforced concrete.
+- RFR Random Forrest Regressor.
+- RMSE Root Mean Squared Error.
+- \( S \) Subset of \( N \) which do not include o.
+- SHAP SHapley Additive exPlantation.
+- \( T \) Training data.
+- \( u \) Number of distinct and nonoverlapping regions.
+- \( v \) Natural number between 1 and \( n \).
+- \( V \) Vapnik’s ε-insensitive loss function.
+- \( w_v \) Weight associated to \( x_v \).
+- \( x_0 \) Element of the column vector [X].
+- \( x_v \) Input element of the set of training data \( x \).
+- \( y \) Generic prediction of ML model.
+- \( y_c \) Output value in \( x \).
+- \( y_m \) Experimental value.
+- \( y_mR \) Predicted value.
+- \( Z \) Subset of \( T \) for the SVR model.
+- \( α \) Fixed parameter.
+- \( ε_0 \) Optimal separating hyperplane in the SVR model.
+- \( β \) SHAP value.
+- \( θ \) ML trained model.
+- \( φ \) Generic increment at \( n \) th fiber of the i th section given by the difference between \( ε_{i}^b \) and \( ε_{i}^t \).
+- \( Δεg_v \) Strain increment at \( n \) th fiber of the i th section under a generic F_v value.
+- \( Δε_k^p \) Strain increment at j th fiber of the i th section due to prestressing loss.
+- \( ξ \) Residual threshold in the SVR model.
+- \( ε_a/Δy \) Absolute numerical strain value at step (a).
+- \( ε w/x_0 \) Absolute numerical strain values at step (b).
+- \( λ_h \) Average of experimental values.
+- \( λ_w \) Slack variables in the SVR model.
+- \( φ \) Nonlinear function of the SVR model.
+- \( υ \) Activation function of the ANN model.
+
+### Data availability
+Data will be made available on request.
+
+### References
+
+[1] Calvi GM, Moratti M, O’Reilly GJ, Scattarreggia N, Monteiro R, Malomo D, et al. Once upon a time in Italy: the tale of the Morandi Bridge. Struct Eng Int 2019;29 (2):198–217. https://doi.org/10.1080/10168664.2018.1558033.
+
+[2] Farneti E, Cavagli N, Costantini M, Trifiletti F, Minati F, Vennari I, et al. A method for structural monitoring of multispan bridges using historical INSAR data with uncertainty quantification and its pre-collapse application to the Albiano-Magra Bridge in Italy. Struct Health Monit 2022;(21):1353–71. https://doi.org/10.1177/ 14759217221058309.
+
+[3] Ministero Delle Infrastrutture e dei Trasporti. Linee Guida per la Classificazione e Gestione del Rischio, la Valutazione della Sicurezza ed il Monitoraggio dei Ponti Esterni, Italy, 2020.
+
+[4] Adam JM, Malkoc N, Rivero B, Buitrago M. Risks of bridge collapses are real and set to rise — here’s why. Nature 2024;629:1001–3. https://doi.org/10.1038/ s41586-024-01526-2.
+
+[5] W. Salvatore, G. Uva, J. Venanzi, C. Mazzotti , M. Morici , A. Natali , et al.
+
+Application of Italian Guidelines for structural-foundational and seismic risk Classification of bridges: the Fabre experience on a large bridge inventory. Proceedings of II Fabre Conference – Existing bridges, viaducts and tunnels: research, innovation and applications, 2024.
+
+[6] Tyson D. The history of prestressed concrete: 1888 to 1963. K-State Electronic Theses, Dissertations, and Reports: 2004. KANSA STATE UNIVERSITY, USA: Lawrence; 2008.
+
+[7] Naicu C, Susoe P, Hodgson I, Pessiki S, Macioce T. Forensic examination of a noncomposite adjacent precast prestressed concrete box beam bridge. J Bridge Eng 2010;15(5):408–18. https://doi.org/10.1061/(ASCE)BE.1943-5592.0000100.
+
+[8] Conrev J. Post-Tensioned. Box Girder Design Manual. Federal Highway Administration; 2015. https://www.fhwa.dot.gov/bridge/concrete/ptbh/girders101-506.pdf.
+
+[9] Chavez AN, Gonzalez-Libreros J, Wang G, Capozzi J, Biondini F, Ejfgren L, et al.
+
+Assessment of residual prestress in existing concrete bridges: the Kaikōura bridge. Eng Struct 2024:311. https://doi.org/10.1016/j.engstruct.2024.118194.
+
+[10] Sconocchia G, Martini I, Iemmiotto I, Menati A, Venuzzi I, Ufierel F. Insights into structural assessment and long-term effects of a post-tensioned multispan concrete box girder bridge with variety prestressed internal joints. Structures 2024:63. https://doi.org/10.1016/j.istruc.2024.104863.
+```
+
+Here's the extracted text in markdown format:
+
+---
+
+### References
+
+1. Kim D, Shim CS. An experimental study on the deterioration behavior of external tendons due to corrosion. KSCE J Civ Eng 2023;27:5319–28. https://doi.org/10.1007/s12205-023-00316-8.
+
+2. Bažant ZP, Jirásek M. Paradigms of application, phenomena affecting creep deformations, and comparisons to measurements on structures. Bažant F Bílý E, Hayashikawa M, editors. In: Concrete structures: Solid mech Appl 2023;16:29–37. https://doi.org/10.1007/978-94-024-1218-6_7.
+
+3. Yang W, Gong Y, Yang K. Refined calculation of time-dependent prestress loss in prestressed concrete girders. Struct Infrastructure Eng 2020;16:1001–16. https://doi.org/10.1080/15732479.2020.1717423.
+
+4. Huang G, Huang S, Yang K. Modeling for assessment of long-term behavior of prestressed concrete bridges. J Bridge Eng 2018;23:8313. https://doi.org/10.1061/(ASCE)BE.1943-5592.0001210.
+
+5. Ministerio delle Infrastrutture e dei Trasporti. Aggiornamento delle <<Norme tecniche per le costruzioni>>, Italy, 2018.
+
+6. CEB Comittee 318. Building Code Requirements for Structural Concrete and Commentary C&T 318-19, 2022.
+
+7. Tu B, Dong Y, Fang Y. Time-dependent reliability and redundancy of corroded prestressed concrete bridges at material, component, and system levels. J Bridge Eng 2024;29. https://doi.org/10.1061/(asce)be.1943-5592.0001461.
+
+8. Bazant Z, Ouyang Z. Relaxation of prestress and safety of geometric vs. time premature-loss in satisfactory-relaxation. J Prestress Concr 1983;13(79):814–23. https://doi.org/10.1061/(ASCE)MM.1943-5599.0000033.
+
+9. Consolazio G, Dalhoff S. Fatigue assessment of tendon rupture on prestressed behavior of reduced-scale specimens of precast concrete bridge segments. J Bridge Eng Struct 2024;30:117358. https://doi.org/10.1016/j.engstruct.2023.117358.
+
+10. Song JW, Qureshi M, Sesar P, Poe CM, Cocane B. Experimental investigation on nonlinear behaviors of prestressed concrete bridge girders with different grouting conduits and prestress levels. J Bridge Eng 2023;29:9235. https://doi.org/10.1061/JENPRBE.68987-6696.
+
+11. Peťko I, Fecht F, Stanković D, Melčák P, Walther S, Presejienka M. Analytical model for the evaluation of time-dependent prestress losses in bonded prestressed beams. Struct 2022;41:22–27. https://doi.org/10.1016/j.tre.2019.11.011.
+
+12. Frencholini L, Veschi F, Bellotti B, Ariande C, Petrielli HC. Analytical treatments of corrosion in steel girders in terms of prestressed concrete severity exposed to carbonation deterioration. Struct Conc 2023;23(1):121–37. https://doi.org/10.1002/suco.202200570.
+
+13. Li L, Osborn A, Accoto A. Incremental swallow data and improvement of existing methodologies for prestressed bridges under fatigue loads. Eng Struct 2024;28:104530. https://doi.org/10.1016/j.engstruct.2022.104530.
+
+14. Levitas E, Merriman P. Time-dependent reliability analysis of corroded prestressed concrete bridge structures with flexural loads. Sci Appl 2022;1:267–74. https://doi.org/10.1016/j.scia.2022.100074.
+
+15. Sousa R, Bento J, Figueiras J. Assessment and management of concrete bridges supported by monitoring systems: Requirements modeling. J Bridge Eng 2018;1:91–106. https://doi.org/10.1061/ASCEBE.1943-5592.0000046.
+
+16. Orcesci C, Căruța N, Bocage G, Scarrott M. Structural health monitoring system bridges. Procedia Eng 2017;199:250–54. https://doi.org/10.1016/j.proeng.2017.09.254.
+
+17. Lee I, Wu S, Sgie H, Zhang H, Zhou H, Jiao P. Integrated structural health monitoring for prestressing-enhancing Autorun Cemento 2023;28. https://doi.org/10.1016/j.tre.2022.010168.
+
+18. Sousa H, Filho C, Bento J, Figueiras J. Design and implementation of a monitoring system of prestressed concrete bridges: A research objective. Struct Concret 2012;11(23):28–35. https://doi.org/10.1016/j.suco.2010.002044.
+
+19. Dal'Aria J, Deus L. Discussion on “Prestress force effect on Vibration frequency of concrete bridges”. J Struct Eng 1996;122(4):896–913. https://doi.org/10.1061/(ASCE)0733-9445-1996:4-232.
+
+20. Hamad E, Frosting Y. Natural frequencies of bonded and unbonded prestressed beams-prestress force effect. J Sound Vib 2006;295(1-2):28–39. https://doi.org/10.1016/j.jsv.2005.04.015.
+
+21. Abraham MA, Park S, Staubs N. Loss of prestress prediction based on structural dynamic response estimation algorithms. J Struct Mech Smart Syst Bridges Struct Highways 2029:4466. https://doi.org/10.11127/2270721.
+
+22. Limberger J, Siegert D, Morzler B, Waggers B, Bourginer Y, Vidal H, et al. Damage detection in post-tensioned concrete beams: experimental investigation. Smart Mater 2016;8:25. https://doi.org/10.1016/j.smrc.2016.01.001.
+
+23. Bonuguman QC, Chang KC, Chen CC, Suing YC, Tuillin X. Prestress force effect on fundamental frequency for detection and clearance of PCI beams. Struct Eng Mech 2018; 67:243–65. https://doi.org/10.12989/SEM.2018.67.3.245.
+
+24. García JE, Losinscja JP, Friaš P, Greeet M. Identification of modal parameters of prestressed concrete beams by OMA dynamic tests. J Bridge Eng 2014;2229:4859–67. https://doi.org/10.1049/NACEJ.BERING.6723.
+
+25. Park G, Sohn H, FARR AR, Inmana DJ. Overview of piezoelectric impedance-based health monitoring and pitch forward. Shock Vib Dig 2023;235)446:131–69. https://doi.org/10.1177/0583102499943303.
+
+26. Rabelo F, Alonso RM, SEYEM. Impedance-based structural health monitoring incorporating compensation of temperature variations effects. 23rd Acadm Conf Span Mex Eng Paris 2016; https://doi.org/10.1006/cvs.-0015-776334.213.
+
+27. Hurak KD, Trim JTF. Impedance-based cable force monitoring in tendons anchorage using portable 7/24-interval technique. Math Prob Eng 2014;141(1). https://doi.org/10.1155/2014/2346892.
+
+28. Kim JS, Park Y, Park SY, Cho JR. A sensor-type PC fixed end with an embedded fiber sensor for monitoring prestress forces. Sensors 2015;15(10):1670–76. https://doi.org/10.3390/s151016700.
+
+29. McKenna L, Fusiek G, Perry M, Johnston M, Smail M, Micwears P, et al. First-time demonstration of smart concrete prestress type fibers with a net placed bridge-girder system. Smart Mater Struct 2015;23(9). https://doi.org/10.1088/0964-1726/23/5/090501.
+
+30. Cheng SY, Wu G, Sixtig J, Deng C. Prestressing force monitoring method for a box girder bridge using distributed long-cage FBG sensors. Smart Mater Struct 2011;20(8):026. https://doi.org/10.1088/1361-665X/aa9b60.
+
+31. Li Z, Tong H. A novel wireless sensor network for structural health monitoring: Issues, Vol 8; 2015. https://doi.org/10.1155/2015/315320.
+
+32. Ho J, Park JW, Spencer Jr, Bung H. Development of high sensitivity wireless strain sensors for structural health monitoring. J Smart Struct Syst 2013;11(5): 477–96. https://doi.org/10/12989/sss.2013.11.5.747.
+
+33. F. Abdel-Jaber A. Comprehensive strain-based monitoring of prestressed concrete beam-like elements. Ph.D. thesis: Princeton University. (2017).
+
+34. Bonopera M, Champ KC, Neville H, Redmond. Identifying residual prestress force in simply supported concrete girders bridges. Adv Streng Struct 2021;42(1):3328–51. https://doi.org/10.1117/1.903432851200267.
+
+35. Abdel-Juber H, Glesbic R. Monitoring of prestressing forces in prestressed concrete structures: An overview. Struct. Control Health Monit 2019:e0. https://doi.org/10.1002/stc.e367.
+
+36. Xing C, Zayed T, Abdelbader EM. A novel VOL-NOM-GA-WoG2 led model for automation of detection in bridge surface cracks. Constr Build Mater 2021;144. https://doi.org/10.1016/j.conbuildmat.2024.153025.
+
+37. Ji Z, Gregson Q, Yuan H, Sun G, Cheng H, et al. Forward transformation model of surface damage prediction on PS sectors in high endurance bridge segments. Struct 2023;28(33). https://doi.org/10.1016/j.overs.2022.119109.
+
+38. Manase ER, Beaty JF, Bovsso P, Sohn H. Mode sensing units using Hi-frequency optical systems: analysis and experiment analyses. Shock Vib Signal Process 2019;5: 523–46. https://doi.org/10.1016/j.pvsmsp.2018.108.730.
+
+39. Fernandez-Peyronis JD, Garrecitti P. Quantifying the extent of load damage of prestressing systems using high range broadband EMI-SHM approach. Struct Health Monit 2023;22(4):59-567. https://doi.org/10/1177/1475982217709795.
+
+40. Shi J, Ou J. Estimating displacement damage in ABA based structural health monitoring approach for beam segments: Application to prestressed concrete elements. Procedia Struct 2018;2016:1–15. https://doi.org/10.1007/315349-1340.
+
+41. Li A, Ge P, Weilin J, Zhang JK. Influence of thermal loads on the frequency variation of concrete beams pre-stressed with unbonded tendons: A numerical analysis. Struct 2024;32. https://doi.org/10.1016/j.cli.2023.03.197.
+
+42. Abdo H, Murakijjan L, Simhaligon S. Tensile fatigue rating of polymer interfaces in ballasts with reinforced latex-filled column layouts. San Eljay 2023;21:583-603. https://doi.org/10.1016/j.stcsub.2023.015231-wi.
+
+43. Faragoir D. Artificial neural network participation in predicting disaster-based losses. J Enhanc. J of bridgo exptm. Earth Eng Struct Dyn 2022;5(13): 612–29. https://doi.org/10.1002/tlee.58358.
+
+44. Botelho H, Neven-Tay N, Do Xinh JT, Huynh TC. A hybrid model for strand loosesness identification in prestressed steel systems via EMI and NN. J Struct Health Monit 2023;15:287–311. https://doi.org/10.1007/33493-020-0436-5.
+
+45. Pisani C, Roquetas.Glass J, Norgesi G, Esson P. Layout case studies assessing the impact of tendon malfunctions in prestressed concrete bridge columns using BIM. Autom Constr 2021;132. https://doi.org/10.1016/j.autcon.2021.103369.
+
+46. Zhang X, Park SJ. Empirical addressing of numerical-based prestressed estimation for pre-stressed concrete bridges using an embedded elasto-magnetic sensor. Struct Health Monit 2020;(19):281–92. https://doi.org/10.11177 (asce)_103202200117.
+
+47. Nguyen TT, Phaya TTW, Ho DJ, Pradhan AMS, Hupty TC. Deep learning-based autonomous damage-sensitive feature extraction for impedance-based prestress monitoring. Eng Struct 2022;229. https://doi.org/10/1016/j.cross.2022.114112.
+
+48. McII Scott
+Sure, here's the extracted text in markdown format:
+
+---
+
+M. Calò et al.  
+*Engineering Structures* 325 (2025) 119400
+
+[67] Bagge N., Nilimaa J., Elfgren L. In-situ methods to determine residual prestress forces in concrete bridges. Eng Struct 2017;153:541–52. https://doi.org/10.1016/j.engstruct.2016.12.059.
+
+[68] Wang Y., Zheng Z., Ji D., Pan X., Tian A. Machine learning-driven probabilistic seismic demand model with multiple intensity measures and application for seismic fragility analysis for nuclear power plants. Soil Dyn Earthq Eng 2023;171. https://doi.org/10.1016/j.soildyn.2023.107956.
+
+[69] Breiman L. Random forests. Mach Learn 2001;45:5–32. https://doi.org/10.1023/ A:1010933404324.
+
+[70] Friedman J., Hastie T., Tibshirani R. The elements of statistical learning. Springer Series in Statistics. NY, New York: Springer; 2009.
+
+[71] Xu M., Vatsavai R.R., Prisod K., Veng, Manoj K.A. Decision tree regression for soft classification of remote sensing data. Remote Sens Environ 2005;97(3):322–35. https://doi.org/10.1016/j.rse.2005.05.005.
+
+[72] Vapnik V.N. [in]Statistical Learning. Estimation of dependencies based on empirical data. New York, NY: Springer-Verlag; 1982.
+
+[73] Vapnik V.N. Statistical Learning Theory. NY, New York: John Wiley & Sons; 1998.
+
+[74] Rodriguez-Perez R., Bajorath J. Evolution of support vector machine regression modeling in cheminformatics and drug discovery. J Comput Aided Mol Des 2022; 36:355–62. https://doi.org/10.1007/s10822-022-00440-2.
+
+[75] Balfer J., Bajorath J. Systematic artifacts in support vector regression-based compound potency prediction revealed by statistical and activity landscape analysis. PLoS One 2015;10(31). https://doi.org/10.1371/journal.pone.0130901.
+
+[76] IETccPH – Instituto Universitario de Ciencia y Tecnologia del Hormigón – UPV https://ietcc.upv.es/index.php/inv/presentacion.
+
+[77] Computer and structures Inc. /SAP2000. Advanced 25. Structural Analysis Program: Manual. Berkeley, California, USA: Computer and Structures, Inc.; 2025.
+
+[78] Python Software Foundation. Open Source Programming Language. Python: A Python. Python Software Foundation; 2015 https://www.python.org/ps/.
+
+[79] Parris F., Magni AM., Rant MP., Adam JM. Automated location of steel truss bridge damage using machine learning and aviation sensor data. Autom Constr 2022;143(81). https://doi.org/10.1016/j.autcon.2022.104249.
+
+[80] Parisi F., Ruggeri S., Lovreglio R., Fant MP., Uva G. On the use of mechanics- informed models to structural engineering systems: application of graph neural networks for structural analysis. Structures 2023:2395. https://doi.org/10.1016/j. istruc.2023.151274.
+
+[81] Mangalgouda S., Hwang S.H., Choi E., Jeon J.S. Rapid seismic damage evaluation of bridge portfolios using machine learning techniques. Eng Struct 2019;201. https:// doi.org/10.1016/j.engstruct.2019.107875.
+
+[82] Agarwal P., Priyaranjan P., Mehta P.B. Box-girder bridges – modelling and analysis. Int J Eng Model 2022;35(1):19–42. https://doi.org/10.31534/engmod.2022.1. fi.02m.
+
+---
